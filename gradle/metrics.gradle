@@ -1,0 +1,30 @@
+sourceSets {
+    metrics {
+        // we count on this to be applied after main source set is defined
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+dependencies {
+    metricsImplementation 'io.micrometer:micrometer-registry-prometheus:1.5.5'
+
+    metricsImplementation 'com.google.protobuf:protobuf-java:3.12.4'
+    metricsImplementation 'org.xerial.snappy:snappy-java:1.1.8'
+    metricsImplementation 'org.apache.httpcomponents:httpclient:4.5.13'
+}
+
+configurations {
+    metrics.extendsFrom(api)
+}
+
+task runMetrics(type: JavaExec, description: 'Run instrumented app') {
+    dependsOn ':generateProto'
+    dependsOn ':compileMetricsJava'
+
+    classpath += sourceSets.metrics.runtimeClasspath
+    sourceSets.metrics.runtimeClasspath.forEach { println(it) }
+    main = 'com.github.loki4j.App'
+}

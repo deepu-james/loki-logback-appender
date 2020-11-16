@@ -75,11 +75,11 @@ public abstract class AbstractLoki4jAppender extends UnsynchronizedAppenderBase<
 
     private ConcurrentBatchBuffer<ILoggingEvent, LogRecord> buffer;
 
-    private ScheduledExecutorService scheduler;
+    protected ScheduledExecutorService scheduler;
     protected ExecutorService httpThreadPool;
 
     @Override
-    public final void start() {
+    public void start() {
         if (getStatusManager() != null && getStatusManager().getCopyOfStatusListenerList().isEmpty()) {
             var statusListener = new StatusPrinter(verbose ? Status.INFO : Status.WARN);
             statusListener.setContext(getContext());
@@ -116,7 +116,7 @@ public abstract class AbstractLoki4jAppender extends UnsynchronizedAppenderBase<
     }
 
     @Override
-    public final void stop() {
+    public void stop() {
         if (!super.isStarted()) {
             return;
         }
@@ -158,6 +158,10 @@ public abstract class AbstractLoki4jAppender extends UnsynchronizedAppenderBase<
     protected abstract void stopHttp();
 
     protected abstract CompletableFuture<LokiResponse> sendAsync(byte[] batch);
+
+    protected byte[] encode(LogRecord[] batch) {
+        return encoder.encode(batch);
+    }
     
 
     private CompletableFuture<Void> drainAsync(long timeoutMs) {
@@ -172,7 +176,7 @@ public abstract class AbstractLoki4jAppender extends UnsynchronizedAppenderBase<
         var batchId = System.nanoTime();
         return CompletableFuture
             .supplyAsync(() -> {
-                var body = encoder.encode(batch);
+                var body = encode(batch);
                 addInfo(String.format(
                     ">>> Batch #%x: Sending %,d items converted to %,d bytes",
                     batchId, batch.length, body.length));

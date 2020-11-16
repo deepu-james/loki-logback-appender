@@ -122,6 +122,7 @@ signing {
 }
 
 apply from: 'gradle/java8.gradle'
+apply from: 'gradle/metrics.gradle'
 
 tasks.withType(GenerateModuleMetadata) {
     enabled = false
